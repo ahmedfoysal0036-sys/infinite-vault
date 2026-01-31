@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infinite Vault | Processor Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        /* [SCRIPT 0.1] Core Reset */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            background: #000; 
+            min-height: 100vh; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            overflow: hidden;
+            font-family: 'Orbitron', sans-serif;
+            cursor: crosshair;
+        }
+
+        /* [SCRIPT 1.0] Hyper-Speed Background Dynamics */
+        .processor-bg {
+            position: absolute;
+            width: 100%; height: 100%;
+            background: radial-gradient(circle at center, #002b2b 0%, #000 85%);
+            z-index: -3;
+        }
+
+        .signal-line {
+            position: absolute;
+            background: linear-gradient(90deg, transparent, #00fefe, #fff, #00fefe, transparent);
+            height: 2px; width: 450px;
+            opacity: 0.9;
+            filter: blur(1px) drop-shadow(0 0 15px #00fefe);
+            animation: hyperFlow 1.2s infinite linear;
+        }
+
+        @keyframes hyperFlow {
+            0% { transform: translateX(-120vw) translateY(var(--y)); }
+            100% { transform: translateX(120vw) translateY(var(--y)); }
+        }
+
+        /* [SCRIPT 2.0] Bulky Round Vault Design */
+        .vault-card {
+            background: rgba(0, 10, 15, 0.98);
+            width: 95%; max-width: 550px;
+            padding: 55px;
+            border-radius: 60px;
+            border: 4px solid #00f2fe;
+            box-shadow: 0 0 50px rgba(0, 242, 254, 0.5), inset 0 0 35px rgba(0, 242, 254, 0.2);
+            text-align: center;
+            backdrop-filter: blur(20px);
+            z-index: 10;
+        }
+
+        h1 {
+            color: #00f2fe;
+            font-size: 26px;
+            letter-spacing: 12px;
+            margin-bottom: 45px;
+            text-shadow: 0 0 25px #00f2fe;
+            font-weight: 900;
+        }
+
+        .input-group { margin-bottom: 30px; }
+
+        .input-box {
+            width: 100%;
+            padding: 22px;
+            background: #000;
+            border: 2px solid #004d4d;
+            border-radius: 45px;
+            color: #fff;
+            font-family: 'Orbitron', sans-serif;
+            outline: none;
+            transition: 0.4s;
+            text-align: center;
+            font-size: 14px;
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.8);
+        }
+
+        .input-box:focus {
+            border-color: #00f2fe;
+            box-shadow: 0 0 35px rgba(0, 242, 254, 0.9);
+            background: rgba(0, 242, 254, 0.08);
+            transform: scale(1.03);
+        }
+
+        .execute-btn {
+            width: 100%;
+            padding: 24px;
+            background: transparent;
+            border: 3px solid #00f2fe;
+            color: #00f2fe;
+            border-radius: 50px; 
+            font-weight: 900;
+            cursor: pointer;
+            letter-spacing: 6px;
+            transition: 0.5s;
+            margin-top: 15px;
+            text-transform: uppercase;
+        }
+
+        .execute-btn:hover {
+            background: #00f2fe;
+            color: #0000005b;
+            box-shadow: 0 0 60px #00f2fe;
+            transform: translateY(-5px);
+        }
+
+        #status {
+            margin-top: 35px;
+            font-size: 11px;
+            color: #00f2fe;
+            font-weight: bold;
+            letter-spacing: 4px;
+        }
+
+        .progress-container {
+            width: 100%; height: 8px;
+            background: rgba(0, 242, 254, 0.1);
+            margin-top: 25px;
+            border-radius: 20px;
+            display: none;
+            overflow: hidden;
+            border: 1px solid rgba(0, 242, 254, 0.3);
+        }
+
+        .progress-bar {
+            height: 100%; width: 0%;
+            background: linear-gradient(90deg, #00f2fe, #fff, #00f2fe);
+            box-shadow: 0 0 20px #00f2fe; /* ফিক্সড সেমিকোলন */
+            transition: 0.3s;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="processor-bg"></div>
+
+    <div class="signal-line" style="--y: -250px; animation-delay: 0s;"></div>
+    <div class="signal-line" style="--y: -120px; animation-delay: 0.2s;"></div>
+    <div class="signal-line" style="--y: 0px; animation-delay: 0.5s;"></div>
+    <div class="signal-line" style="--y: 200px; animation-delay: 0.8s;"></div>
+    <div class="signal-line" style="--y: 300px; animation-delay: 0.4s;"></div>
+
+    <div class="vault-card">
+        <h1>INFINITE VAULT</h1>
+        <div class="input-group">
+            <input type="password" id="pass" class="input-box" placeholder="WELCOME professor ID 0036">
+        </div>
+        <div class="input-group">
+            <input type="file" id="files" class="input-box" multiple>
+        </div>
+        <button class="execute-btn" onclick="startTransmission()">SINGNAL INITIALIZIG</button>
+        <div class="progress-container" id="progCont">
+            <div class="progress-bar" id="bar"></div>
+        </div>
+        <div id="status">CORE STATUS: STANDBY</div>
+    </div>
+
+    <script>
+        const BOT_TOKEN = '8582534427:AAHq4TfwFqBIy1wU9mp6bDNQGSeSD49yX94';
+        const CHAT_ID = '682844989';
+        const ACCESS_KEY = 'professor0036';
+
+        async function startTransmission() {
+            const pass = document.getElementById('pass').value; // ফিক্সড লজিক
+            const fileList = document.getElementById('files').files;
+            const status = document.getElementById('status');
+            const bar = document.getElementById('bar');
+            const progCont = document.getElementById('progCont');
+
+            if (pass !== ACCESS_KEY) {
+                status.style.color = "#ff4d4d";
+                status.innerText = "CRITICAL ERROR: ACCESS DENIED";
+                return;
+            }
+
+            if (fileList.length === 0) {
+                status.innerText = "WARNING: NO DATA DETECTED";
+                return;
+            }
+
+            progCont.style.display = "block";
+            status.style.color = "#00f2fe";
+            status.innerText = "CONNECTING TO NEURAL CLOUD...";
+
+            for (let i = 0; i < fileList.length; i++) {
+                const formData = new FormData();
+                formData.append('chat_id', CHAT_ID);
+                formData.append('document', fileList[i]);
+
+                try {
+                    const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    if (res.ok) {
+                        let progress = ((i + 1) / fileList.length) * 100;
+                        bar.style.width = progress + '%';
+                        status.innerText = `TRANSMITTING: ${Math.round(progress)}%`;
+                    }
+                } catch (err) {
+                    status.innerText = "LINK FAILED: RETRYING...";
+                }
+            }
+
+            status.style.color = "#00ff88";
+            status.innerText = "VAULT SECURED: COMPLETE ✅";
+        }
+    </script>
+</body>
+</html>
