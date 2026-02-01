@@ -214,4 +214,234 @@
         }
     </script>
 </body>
+
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Protocol Vault | Professor 0036</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --glow: #00f2fe; --bg: #000; --red-glow: #ff4d4d; }
+        * { margin: 0; padding: 0; box-sizing: border-box; cursor: none; }
+        body { background: var(--bg); min-height: 100vh; overflow: hidden; font-family: 'Orbitron', sans-serif; color: var(--glow); }
+
+        #cursor {
+            position: fixed; width: 12px; height: 12px; background: var(--glow);
+            border-radius: 50%; pointer-events: none; z-index: 9999;
+            box-shadow: 0 0 20px var(--glow); transform: translate(-50%, -50%);
+        }
+
+        #bg-canvas { position: fixed; top: 0; left: 0; z-index: -1; }
+
+        /* Octagon Core Layer */
+        #intro-layer {
+            height: 100vh; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; transition: 2s; opacity: 1;
+        }
+
+        .quantum-octagon {
+            width: 220px; height: 220px; background: rgba(0, 242, 254, 0.05);
+            clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
+            border: 4px solid var(--glow); display: flex; justify-content: center;
+            align-items: center; position: relative; box-shadow: 0 0 40px var(--glow);
+            animation: rotateCore 15s infinite linear; cursor: pointer;
+        }
+
+        @keyframes rotateCore { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        /* Main UI Card */
+        #main-ui { display: none; height: 100vh; flex-direction: column; justify-content: center; align-items: center; opacity: 0; transition: 1.5s; }
+
+        .vault-card {
+            background: rgba(0, 5, 10, 0.98); padding: 50px; border-radius: 60px;
+            border: 3px solid var(--glow); box-shadow: 0 0 80px rgba(0, 242, 254, 0.2);
+            text-align: center; width: 90%; max-width: 600px; position: relative;
+        }
+
+        h1 { font-weight: 900; font-size: 30px; letter-spacing: 12px; margin-bottom: 20px; text-shadow: 0 0 15px var(--glow); }
+
+        #typing-text { font-size: 14px; margin-bottom: 30px; min-height: 40px; color: #fff; line-height: 1.6; letter-spacing: 1px; font-weight: 600; }
+
+        .input-box {
+            width: 100%; padding: 22px; background: transparent; border: 2px solid #004d4d;
+            border-radius: 50px; color: #fff; font-family: 'Orbitron'; margin-bottom: 20px;
+            outline: none; text-align: center; font-weight: 900;
+        }
+
+        .execute-btn {
+            width: 100%; padding: 22px; background: var(--glow); border: none;
+            color: #000; border-radius: 50px; font-weight: 900; letter-spacing: 4px;
+            font-size: 18px; cursor: pointer; box-shadow: 0 0 30px var(--glow); transition: 0.3s;
+            margin-bottom: 15px;
+        }
+
+        /* Stylish Logout Button */
+        .logout-btn {
+            background: transparent; border: 2px solid var(--red-glow); color: var(--red-glow);
+            padding: 12px 30px; border-radius: 50px; font-family: 'Orbitron'; font-weight: 900;
+            font-size: 12px; letter-spacing: 3px; cursor: pointer; transition: 0.4s;
+            text-transform: uppercase; margin-top: 10px;
+        }
+
+        .logout-btn:hover {
+            background: var(--red-glow); color: #000; box-shadow: 0 0 30px var(--red-glow);
+        }
+    </style>
+</head>
+<body onclick="startFirstVoice()">
+
+    <div id="cursor"></div>
+    <canvas id="bg-canvas"></canvas>
+
+    <div id="intro-layer">
+        <div class="quantum-octagon" onclick="initiateLaunch()">
+            <div style="width:50px; height:50px; background:#fff; clip-path:polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); box-shadow: 0 0 40px #fff;"></div>
+        </div>
+        <p style="margin-top: 40px; font-weight: 900; letter-spacing: 8px;">INITIALIZE CORE</p>
+    </div>
+
+    <div id="main-ui">
+        <div class="vault-card">
+            <h1>PROTOCOL VAULT</h1>
+            <div id="typing-text">SYSTEM STANDBY...</div>
+            <input type="password" id="pass" class="input-box" placeholder="....">
+            <input type="file" id="files" class="input-box" multiple onchange="protocolSpeak('Files attached professor')">
+            <button class="execute-btn" onclick="startTransmission()">LAUNCH TRANSMISSION</button>
+            <br>
+            <button class="logout-btn" onclick="terminateSession()">Terminate Session</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let mouse = { x: 0, y: 0 };
+        let isAudioStarted = false;
+
+        window.onmousemove = (e) => { 
+            mouse.x = e.clientX; mouse.y = e.clientY;
+            document.getElementById('cursor').style.left = e.clientX + 'px';
+            document.getElementById('cursor').style.top = e.clientY + 'px';
+        };
+
+        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.onresize = resize; resize();
+
+        class Particle {
+            constructor() { this.init(); }
+            init() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 4 + 2;
+                this.speedX = (Math.random() - 0.5) * 1.2;
+                this.speedY = (Math.random() - 0.5) * 1.2;
+            }
+            update() {
+                this.x += this.speedX + (mouse.x - canvas.width/2) * 0.01;
+                this.y += this.speedY + (mouse.y - canvas.height/2) * 0.01;
+                if(this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) this.init();
+            }
+            draw() { ctx.fillStyle = '#00f2fe33'; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI*2); ctx.fill(); }
+        }
+        for(let i=0; i<100; i++) particles.push(new Particle());
+
+        function animate() {
+            ctx.clearRect(0,0,canvas.width, canvas.height);
+            particles.forEach(p => { p.update(); p.draw(); });
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        let typingTimeout;
+        function protocolSpeak(text, speed = 0.9) {
+            window.speechSynthesis.cancel();
+            clearTimeout(typingTimeout);
+            const msg = new SpeechSynthesisUtterance(text);
+            msg.rate = speed; msg.pitch = 1.2;
+            const voices = window.speechSynthesis.getVoices();
+            msg.voice = voices.find(v => v.name.includes('Female')) || voices[0];
+            window.speechSynthesis.speak(msg);
+            
+            const target = document.getElementById('typing-text');
+            if(!target) return;
+            target.innerHTML = "";
+            let i = 0;
+            function type() {
+                if (i < text.length) {
+                    target.innerHTML += text.charAt(i);
+                    i++;
+                    typingTimeout = setTimeout(type, 40);
+                }
+            }
+            type();
+        }
+
+        function startFirstVoice() {
+            if(!isAudioStarted) {
+                protocolSpeak("Professor, we are ready for launch.");
+                isAudioStarted = true;
+            }
+        }
+
+        function initiateLaunch() {
+            protocolSpeak("Welcome to future, Professor zero zero three six");
+            setTimeout(() => {
+                document.getElementById('intro-layer').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('intro-layer').style.display = 'none';
+                    const mainUI = document.getElementById('main-ui');
+                    mainUI.style.display = 'flex';
+                    setTimeout(() => { 
+                        mainUI.style.opacity = '1';
+                        protocolSpeak("Friday here. Please choose your files, Professor.");
+                    }, 100);
+                }, 1000);
+            }, 2500);
+        }
+
+        // Logout / Terminate Logic
+        function terminateSession() {
+            protocolSpeak("Best of luck, Professor.");
+            
+            setTimeout(() => {
+                const mainUI = document.getElementById('main-ui');
+                mainUI.style.opacity = '0';
+                
+                setTimeout(() => {
+                    mainUI.style.display = 'none';
+                    const intro = document.getElementById('intro-layer');
+                    intro.style.display = 'flex';
+                    setTimeout(() => { 
+                        intro.style.opacity = '1';
+                        document.getElementById('pass').value = ""; // Clear pass
+                        document.getElementById('files').value = ""; // Clear files
+                        document.getElementById('typing-text').innerHTML = "SYSTEM STANDBY...";
+                    }, 100);
+                }, 1500);
+            }, 2000);
+        }
+
+        async function startTransmission() {
+            const pass = document.getElementById('pass').value;
+            const files = document.getElementById('files').files;
+            if (pass !== 'professor0036') { protocolSpeak("Access denied."); return; }
+            if (files.length === 0) { protocolSpeak("No files selected."); return; }
+
+            protocolSpeak("Initializing processing...");
+            const BOT_TOKEN = '8582534427:AAHq4TfwFqBIy1wU9mp6bDNQGSeSD49yX94';
+            const CHAT_ID = '682844989';
+
+            for (let file of files) {
+                const formData = new FormData();
+                formData.append('chat_id', CHAT_ID);
+                formData.append('document', file);
+                try { await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, { method: 'POST', body: formData }); } catch (e) {}
+            }
+            setTimeout(() => { protocolSpeak("Congratulations Professor, your files sent successfully."); }, 1000);
+        }
+    </script>
+</body>
 </html>
