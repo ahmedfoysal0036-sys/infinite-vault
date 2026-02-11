@@ -3,21 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Protocol Vault | Professor</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <title>Professor | Civilization Core 2.0</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root { 
-            --glow: #00f2fe; 
-            --bg: #00080f; 
-            --red: #ff1a1a; 
-            --success: #00ff88; 
-            --particle-p: #25bcd6; 
-            --particle-n: #4956ce;
-            --font: 'Orbitron', sans-serif;
+            --glow: #00f2fe; --bg: #00080f; --red: #ff1a1a; 
+            --success: #00ff88; --font: 'Orbitron', sans-serif;
+            --mono: 'JetBrains Mono', monospace;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; cursor: none !important; }
-        body { background: var(--bg); height: 100vh; overflow: hidden; font-family: var(--font); color: var(--glow); transition: background 0.3s; }
+        body { background: var(--bg); height: 100vh; overflow: hidden; font-family: var(--font); color: var(--glow); transition: 0.5s; }
         
         #cursor { 
             position: fixed; width: 14px; height: 14px; background: var(--glow); 
@@ -25,87 +21,73 @@
             box-shadow: 0 0 15px var(--glow); transform: translate(-50%, -50%); 
         }
 
-        #bg-canvas, #particle-canvas { position: fixed; top: 0; left: 0; z-index: 0; }
-        #bg-canvas { opacity: 0.2; }
-
-        .alarm-bg { background: radial-gradient(circle, #400000 0%, #00080f 100%) !important; animation: flash 0.5s infinite; }
-        @keyframes flash { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        #bg-canvas, #particle-canvas { position: fixed; top: 0; left: 0; z-index: 0; pointer-events: none; }
+        
+        /* Danger Theme Class */
+        .danger-mode { background: #1a0000 !important; --glow: #ff1a1a; }
 
         #intro-layer, #main-ui { 
             position: absolute; width: 100%; height: 100vh; 
             display: flex; flex-direction: column; justify-content: center; 
-            align-items: center; transition: 0.8s cubic-bezier(0.4, 0, 0.2, 1); 
+            align-items: center; transition: 0.8s; 
         }
 
-        #main-ui { display: none; opacity: 0; z-index: 20; }
+        #main-ui { display: none; opacity: 0; z-index: 20; padding: 20px; flex-direction: row; gap: 20px; }
 
-        .core-container { position: relative; width: 250px; height: 250px; display: flex; justify-content: center; align-items: center; margin-bottom: 30px; }
-        .core-center { 
-            width: 80px; height: 80px; background: #fff; border-radius: 50%; 
-            box-shadow: 0 0 50px #fff, 0 0 100px var(--glow); z-index: 10; 
-            animation: pulse 2s infinite alternate; 
+        /* Login & Scanner */
+        .login-box { text-align: center; z-index: 30; }
+        .scanner-ring {
+            width: 120px; height: 120px; border: 2px solid var(--glow); border-radius: 20px;
+            margin: 0 auto 20px; position: relative; overflow: hidden; cursor: pointer;
         }
-        .core-ring { position: absolute; border: 2px solid var(--glow); border-radius: 50%; animation: orbit linear infinite; }
-
-        .login-box { text-align: center; z-index: 30; transform: translateY(0); transition: 0.5s; }
-        .input-glow { 
-            width: 300px; padding: 18px; background: rgba(0,0,0,0.7); 
-            border: 1px solid var(--glow); border-radius: 50px; color: #fff; 
-            font-family: var(--font); text-align: center; outline: none;
-            box-shadow: inset 0 0 10px rgba(0, 242, 254, 0.2); transition: 0.3s;
-            font-size: 14px; letter-spacing: 3px;
+        .scanner-line {
+            position: absolute; width: 100%; height: 4px; background: var(--glow);
+            box-shadow: 0 0 15px var(--glow); top: 0; animation: scan 2s infinite linear;
         }
-        .input-glow:focus { box-shadow: 0 0 20px var(--glow); width: 350px; }
+        @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
 
+        /* Dashboard Layout */
         .vault-card { 
-            background: rgba(0, 20, 40, 0.8); padding: 50px; border-radius: 40px; 
-            border: 1px solid var(--glow); text-align: center; width: 95%; 
-            max-width: 550px; backdrop-filter: blur(20px); z-index: 30;
-            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            background: rgba(0, 20, 40, 0.8); padding: 40px; border-radius: 25px; 
+            border: 1px solid var(--glow); text-align: center; flex: 1;
+            max-width: 500px; backdrop-filter: blur(20px); box-shadow: 0 0 50px rgba(0,0,0,0.5);
+        }
+
+        /* Terminal Window */
+        .terminal {
+            flex: 1; max-width: 400px; height: 500px; background: rgba(0,0,0,0.9);
+            border: 1px solid var(--glow); border-radius: 15px; font-family: var(--mono);
+            font-size: 11px; padding: 15px; overflow-y: auto; color: var(--success);
+            box-shadow: inset 0 0 20px rgba(0,255,136,0.1); display: none;
+        }
+
+        .input-glow { 
+            width: 100%; padding: 15px; background: rgba(0,0,0,0.7); 
+            border: 1px solid var(--glow); border-radius: 10px; color: #fff; 
+            font-family: var(--font); text-align: center; outline: none; margin-bottom: 15px;
         }
 
         .execute-btn { 
-            width: 100%; padding: 25px; background: var(--glow); border: none; 
-            font-weight: 900; cursor: pointer; border-radius: 15px; color: #000; 
-            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-            font-family: var(--font); font-size: 16px; letter-spacing: 2px;
-            box-shadow: 0 10px 0 #008a91; position: relative; overflow: hidden;
+            width: 100%; padding: 20px; background: var(--glow); border: none; 
+            font-weight: 900; border-radius: 10px; color: #000; 
+            transition: 0.3s; font-family: var(--font); letter-spacing: 2px;
         }
-        .execute-btn:hover { 
-            transform: scale(1.05) translateY(-5px); 
-            background: #fff; box-shadow: 0 15px 30px var(--glow); 
-        }
-        .execute-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #008a91; }
+        .execute-btn:hover:not(:disabled) { transform: scale(1.02); background: #fff; box-shadow: 0 0 20px var(--glow); }
+        .execute-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        .progress-circle-wrap { position: relative; width: 120px; height: 120px; margin: 20px auto; display: none; }
-        .circle-svg { transform: rotate(-90deg); width: 120px; height: 120px; }
-        .circle-bg { fill: none; stroke: #111; stroke-width: 8; }
-        .circle-bar { fill: none; stroke: var(--success); stroke-width: 8; stroke-dasharray: 314; stroke-dashoffset: 314; transition: 0.2s; stroke-linecap: round; }
-        .counter-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 12px; color: var(--success); }
+        /* Success/Error Grid */
+        .integrity-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin: 15px 0; }
+        .file-node { width: 10px; height: 10px; background: #222; border-radius: 2px; transition: 0.3s; }
+        .file-node.done { background: var(--success); box-shadow: 0 0 5px var(--success); }
+        .file-node.skip { background: var(--red); box-shadow: 0 0 5px var(--red); }
 
-        /* Terminate Box Styling */
-        .terminate-container {
-            margin-top: 40px;
-            padding: 15px;
-            border: 1px solid rgba(255, 26, 26, 0.3);
-            border-radius: 12px;
-            background: rgba(255, 0, 0, 0.05);
-            transition: 0.3s;
-        }
-        .terminate-container:hover {
-            border-color: var(--red);
-            background: rgba(255, 0, 0, 0.1);
-            box-shadow: 0 0 15px rgba(255, 26, 26, 0.2);
-        }
-        .terminate-btn {
-            background: none; border: none; color: var(--red); 
-            cursor: pointer; font-family: var(--font); 
-            font-size: 10px; letter-spacing: 3px; font-weight: bold;
-            text-transform: uppercase;
-        }
+        .progress-circle-wrap { position: relative; width: 100px; height: 100px; margin: 0 auto 15px; display: none; }
+        .circle-svg { transform: rotate(-90deg); width: 100px; height: 100px; }
+        .circle-bg { fill: none; stroke: #111; stroke-width: 6; }
+        .circle-bar { fill: none; stroke: var(--success); stroke-width: 6; stroke-dasharray: 283; stroke-dashoffset: 283; transition: 0.2s; }
+        .counter-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 10px; }
 
-        @keyframes pulse { from { transform: scale(0.9); opacity: 0.8; } to { transform: scale(1.1); opacity: 1; } }
-        @keyframes orbit { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .terminate-container { margin-top: 20px; padding: 10px; border: 1px solid rgba(255,0,0,0.2); border-radius: 8px; }
     </style>
 </head>
 <body onclick="App.initAudio()">
@@ -115,45 +97,41 @@
     <canvas id="particle-canvas"></canvas>
 
     <div id="intro-layer">
-        <div class="core-container">
-            <div class="core-center"></div>
-            <div class="core-ring" style="width:140px; height:140px; animation-duration: 3s;"></div>
-            <div class="core-ring" style="width:200px; height:200px; animation-duration: 5s; border-style: dashed;"></div>
-            <div class="core-ring" style="width:250px; height:250px; animation-duration: 8s; opacity: 0.3;"></div>
-        </div>
-        
         <div class="login-box">
-            <h2 id="greet-msg" style="margin-bottom:20px; letter-spacing:5px;">SYSTEM ENCRYPTED</h2>
-            <input type="password" id="boot-pass" class="input-glow" placeholder="ENTER ACCESS KEY">
-            <button class="execute-btn" style="margin-top:20px; width:200px; padding:15px;" onclick="App.boot()">INITIALIZE</button>
+            <div class="scanner-ring" id="scanner" onclick="App.speak('Biometric required')">
+                <div class="scanner-line"></div>
+            </div>
+            <h2 id="greet-msg" style="margin-bottom:20px; font-size: 14px; letter-spacing:3px;">IDENTITY VERIFICATION</h2>
+            <input type="password" id="boot-pass" class="input-glow" placeholder="ACCESS KEY">
+            <button class="execute-btn" style="width:150px; padding:12px;" onclick="App.boot()">VERIFY</button>
         </div>
     </div>
 
     <div id="main-ui">
         <div class="vault-card">
-            <h1 id="title" style="font-size:24px; margin-bottom:10px;">CIVILIZATION CORE</h1>
-            <p id="msg" style="font-size:12px; margin-bottom:30px; color:#aaa; letter-spacing:2px;">STABLE STATE</p>
+            <h1 id="title" style="font-size:20px; margin-bottom:5px;">CIVILIZATION CORE</h1>
+            <p id="msg" style="font-size:10px; margin-bottom:20px; color:#aaa; letter-spacing:1px;">SECURE NODE: 8801857974447</p>
             
-            <div style="position:relative; margin-bottom:20px;">
-                <input type="file" id="files" class="input-glow" style="width:100%" multiple>
-            </div>
+            <input type="file" id="files" class="input-glow" multiple onchange="App.prepNodes()">
+
+            <div class="integrity-grid" id="node-grid"></div>
 
             <div class="progress-circle-wrap" id="p-circle">
                 <svg class="circle-svg">
-                    <circle class="circle-bg" cx="60" cy="60" r="50"></circle>
-                    <circle id="circle-proc" class="circle-bar" cx="60" cy="60" r="50"></circle>
+                    <circle class="circle-bg" cx="50" cy="50" r="45"></circle>
+                    <circle id="circle-proc" class="circle-bar" cx="50" cy="50" r="45"></circle>
                 </svg>
                 <div class="counter-text" id="count-ui">0/0</div>
             </div>
 
-            <button id="up-btn" class="execute-btn" onclick="App.upload()">START TRANSMISSION</button>
-            
-            <div id="log-status" style="margin-top:20px; font-size:12px;"></div>
+            <button id="up-btn" class="execute-btn" onclick="App.upload()">INITIATE SYNC</button>
             
             <div class="terminate-container">
-                <button class="terminate-btn" onclick="location.reload()">TERMINATE CONNECTION</button>
+                <button style="background:none; border:none; color:var(--red); font-family:var(--font); font-size:9px; cursor:pointer;" onclick="location.reload()">ABORT PROTOCOL</button>
             </div>
         </div>
+
+        <div class="terminal" id="term"></div>
     </div>
 
     <script>
@@ -176,77 +154,78 @@
                 };
                 window.onresize();
 
-                this.stars = Array.from({length:60}, () => ({ x:Math.random()*cvs.width, y:Math.random()*cvs.height, s:Math.random()*2 }));
+                this.stars = Array.from({length:50}, () => ({ x:Math.random()*cvs.width, y:Math.random()*cvs.height, s:Math.random()*2 }));
                 
-                const createParticle = () => {
-                    const side = Math.floor(Math.random() * 4);
-                    let x, y;
-                    if(side === 0) { x = Math.random()*cvs.width; y = -20; }
-                    else if(side === 1) { x = Math.random()*cvs.width; y = cvs.height+20; }
-                    else if(side === 2) { x = -20; y = Math.random()*cvs.height; }
-                    else { x = cvs.width+20; y = Math.random()*cvs.height; }
-                    return { x, y, type: Math.random() > 0.5 ? 'p' : 'n', speed: Math.random() * 2 + 1 };
-                };
-
                 const render = () => {
                     ctx.clearRect(0,0,cvs.width,cvs.height);
-                    ctx.fillStyle = '#00f2fe55';
+                    ctx.fillStyle = '#00f2fe44';
                     this.stars.forEach(s => { ctx.beginPath(); ctx.arc(s.x,s.y,s.s,0,Math.PI*2); ctx.fill(); });
+                    
                     pCtx.clearRect(0,0,pCvs.width,pCvs.height);
-                    if(this.particles.length < 50) this.particles.push(createParticle());
-                    const centerX = pCvs.width/2;
-                    const centerY = pCvs.height/2;
+                    if(this.particles.length < 30) this.particles.push({
+                        x: Math.random()*pCvs.width, y: Math.random()*pCvs.height, 
+                        r: Math.random()*2, s: Math.random()*1+0.5 
+                    });
                     this.particles.forEach((p, i) => {
-                        const dx = centerX - p.x; const dy = centerY - p.y;
-                        const dist = Math.sqrt(dx*dx + dy*dy);
-                        p.x += (dx/dist) * p.speed; p.y += (dy/dist) * p.speed;
-                        pCtx.beginPath(); pCtx.arc(p.x, p.y, 3, 0, Math.PI*2);
-                        pCtx.fillStyle = p.type === 'p' ? getComputedStyle(document.documentElement).getPropertyValue('--particle-p') : getComputedStyle(document.documentElement).getPropertyValue('--particle-n');
-                        pCtx.shadowBlur = 10; pCtx.shadowColor = pCtx.fillStyle;
+                        p.y -= p.s;
+                        pCtx.beginPath(); pCtx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+                        pCtx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--glow');
                         pCtx.fill();
-                        if(dist < 30) this.particles.splice(i, 1);
+                        if(p.y < 0) this.particles.splice(i,1);
                     });
                     requestAnimationFrame(render);
                 };
                 render();
-
                 document.addEventListener('mousemove', e => { 
                     document.getElementById('cursor').style.left = e.clientX+'px'; 
                     document.getElementById('cursor').style.top = e.clientY+'px'; 
                 });
             },
 
-            initAudio() { 
-                if(!this.audioStarted) { 
-                    this.audioStarted = true;
-                    window.speechSynthesis.speak(new SpeechSynthesisUtterance(""));
-                } 
-            },
+            initAudio() { if(!this.audioStarted) { this.audioStarted = true; this.speak("System standing by"); } },
 
             speak(t) {
                 window.speechSynthesis.cancel();
                 const m = new SpeechSynthesisUtterance(t);
-                m.rate = 1.0; m.pitch = 0.7;
-                document.getElementById('msg').innerText = t.toUpperCase();
+                m.rate = 1.1; m.pitch = 0.8;
                 window.speechSynthesis.speak(m);
             },
 
+            log(msg, type='info') {
+                const t = document.getElementById('term');
+                const line = document.createElement('div');
+                line.style.color = type === 'err' ? 'var(--red)' : 'var(--success)';
+                line.innerHTML = `> [${new Date().toLocaleTimeString()}] ${msg}`;
+                t.appendChild(line);
+                t.scrollTop = t.scrollHeight;
+            },
+
             boot() {
-                const pass = document.getElementById('boot-pass').value;
-                if(pass === this.P) {
-                    document.body.classList.remove('alarm-bg');
-                    this.speak("Access Activated. Welcome to the future, Professor.");
+                if(document.getElementById('boot-pass').value === this.P) {
+                    this.speak("Welcome back, Professor. Access granted.");
                     document.getElementById('intro-layer').style.opacity = '0';
                     setTimeout(() => { 
                         document.getElementById('intro-layer').style.display = 'none';
                         document.getElementById('main-ui').style.display = 'flex';
+                        document.getElementById('term').style.display = 'block';
                         setTimeout(() => document.getElementById('main-ui').style.opacity = '1', 50);
+                        this.log("System Initialized...");
+                        this.log("Nodes: Online");
                     }, 800);
                 } else {
-                    document.body.classList.add('alarm-bg');
-                    this.speak("Security Breach. Invalid Access Key.");
-                    setTimeout(() => document.body.classList.remove('alarm-bg'), 2000);
+                    document.body.classList.add('danger-mode');
+                    this.speak("Unauthorized access attempt. Alarm triggered.");
+                    this.log("CRITICAL ERROR: AUTH_FAILED", 'err');
+                    setTimeout(() => document.body.classList.remove('danger-mode'), 2000);
                 }
+            },
+
+            prepNodes() {
+                const count = document.getElementById('files').files.length;
+                const grid = document.getElementById('node-grid');
+                grid.innerHTML = '';
+                for(let i=0; i<count; i++) grid.innerHTML += `<div class="file-node" id="node-${i}"></div>`;
+                this.log(`${count} payloads queued for transmission.`);
             },
 
             async upload() {
@@ -254,17 +233,18 @@
                 const btn = document.getElementById('up-btn');
                 const circle = document.getElementById('circle-proc');
                 const countUI = document.getElementById('count-ui');
-                const log = document.getElementById('log-status');
                 
-                if(files.length === 0) return this.speak("No payload selected");
+                if(files.length === 0) return this.speak("No files detected");
 
                 btn.disabled = true;
                 document.getElementById('p-circle').style.display = 'block';
-                log.innerText = ""; 
+                this.log("Starting secure uplink...");
 
                 for(let i=0; i<files.length; i++) {
                     countUI.innerText = `${i+1}/${files.length}`;
-                    await new Promise(r => setTimeout(r, 200)); 
+                    const node = document.getElementById(`node-${i}`);
+                    
+                    await new Promise(r => setTimeout(r, 100)); // Ultra-fast 100ms gap
 
                     try {
                         await new Promise((resolve, reject) => {
@@ -276,41 +256,36 @@
                             xhr.upload.onprogress = e => {
                                 if (e.lengthComputable) {
                                     const percent = (e.loaded / e.total) * 100;
-                                    const offset = 314 - (314 * percent / 100);
-                                    circle.style.strokeDashoffset = offset;
+                                    circle.style.strokeDashoffset = 283 - (283 * percent / 100);
                                 }
                             };
 
                             xhr.onreadystatechange = () => {
                                 if (xhr.readyState === 4) {
                                     if (xhr.status === 200) {
-                                        const res = JSON.parse(xhr.responseText);
-                                        if(res.ok) resolve();
-                                        else reject("Skip: " + res.description);
+                                        this.log(`Syncing: ${files[i].name}... OK`);
+                                        node.classList.add('done');
+                                        resolve();
                                     } else {
-                                        reject("Skip: Network Error " + xhr.status);
+                                        reject("Status " + xhr.status);
                                     }
                                 }
                             };
-
-                            xhr.onerror = () => reject("Skip: Network failed");
+                            xhr.onerror = () => reject("Network failure");
                             xhr.open('POST', `https://api.telegram.org/bot${this.T}/sendDocument`, true);
                             xhr.send(fd);
                         });
                     } catch(e) {
-                        console.warn(e);
-                        log.innerText = `Skipping Corrupted File #${i+1}`;
-                        log.style.color = "var(--red)";
-                        document.body.classList.add('alarm-bg');
-                        setTimeout(() => document.body.classList.remove('alarm-bg'), 300);
-                        continue; 
+                        this.log(`Warning: Payload ${i+1} Corrupted. Skipping...`, 'err');
+                        node.classList.add('skip');
+                        document.body.classList.add('danger-mode');
+                        setTimeout(() => document.body.classList.remove('danger-mode'), 300);
+                        continue;
                     }
                 }
 
-                document.getElementById('title').style.color = "var(--success)";
-                log.innerText = "Transmission Verified.";
-                log.style.color = "var(--success)";
-                this.speak("All data synchronized. Protocol complete.");
+                this.speak("Transmission complete. All nodes synchronized.");
+                this.log("Protocol Finish. System Secure.");
                 btn.disabled = false;
             }
         };
