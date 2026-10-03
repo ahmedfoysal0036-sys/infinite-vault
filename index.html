@@ -1,14 +1,28 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Civilization Core | Backup Dashboard</title>
     <!-- JSZip for creating zip archive -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root {
+            --bg: #090d16;
+            --card-bg: #111827;
+            --text: #f3f4f6;
+            --text-muted: #9ca3af;
+            --border: #1f2937;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --success: #10b981;
+            --danger: #ef4444;
+            --terminal-bg: #030712;
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+
+        [data-theme="light"] {
             --bg: #f8fafc;
             --card-bg: #ffffff;
             --text: #0f172a;
@@ -16,63 +30,59 @@
             --border: #e2e8f0;
             --primary: #2563eb;
             --primary-hover: #1d4ed8;
-            --success: #10b981;
-            --danger: #ef4444;
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-        }
-
-        [data-theme="dark"] {
-            --bg: #0f172a;
-            --card-bg: #1e293b;
-            --text: #f8fafc;
-            --text-muted: #94a3b8;
-            --border: #334155;
-            --primary: #3b82f6;
-            --primary-hover: #2563eb;
             --success: #059669;
             --danger: #dc2626;
-            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            --terminal-bg: #0f172a;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; transition: background 0.3s, color 0.3s; }
         
         body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
 
-        .container { width: 100%; max-width: 480px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 30px; box-shadow: var(--shadow); position: relative; }
+        .main-layout { display: flex; gap: 20px; width: 100%; max-width: 900px; flex-wrap: wrap; justify-content: center; }
 
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-        .header h1 { font-size: 18px; font-weight: 700; }
+        .container { width: 100%; max-width: 440px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 20px; padding: 24px; box-shadow: var(--shadow); }
+
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .header h1 { font-size: 16px; font-weight: 700; letter-spacing: 0.5px; }
         
-        .theme-toggle { background: transparent; border: 1px solid var(--border); color: var(--text); padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; }
+        .theme-toggle { background: transparent; border: 1px solid var(--border); color: var(--text); padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: 600; cursor: pointer; }
         .theme-toggle:hover { background: var(--border); }
 
-        .login-screen { text-align: center; }
+        .login-screen { text-align: center; padding: 20px 0; }
         .dashboard-screen { display: none; }
 
         .form-group { margin-bottom: 16px; text-align: left; }
-        .form-group label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px; color: var(--text-muted); }
+        .form-group label { display: block; font-size: 11px; font-weight: 600; margin-bottom: 6px; color: var(--text-muted); letter-spacing: 1px; }
         
-        .input-field { width: 100%; padding: 12px 16px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; outline: none; }
+        .input-field { width: 100%; padding: 12px 16px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-size: 14px; outline: none; }
         .input-field:focus { border-color: var(--primary); }
 
-        .btn { width: 100%; padding: 12px; background: var(--primary); color: #fff; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; transition: background 0.2s; margin-top: 8px; }
+        .btn { width: 100%; padding: 12px; background: var(--primary); color: #fff; border: none; border-radius: 10px; font-weight: 600; font-size: 13px; cursor: pointer; transition: background 0.2s; margin-top: 8px; }
         .btn:hover { background: var(--primary-hover); }
-        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); margin-top: 10px; }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); margin-top: 8px; }
         .btn-outline:hover { background: var(--border); }
 
-        .file-drop-area { border: 2px dashed var(--border); border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 16px; cursor: pointer; position: relative; }
+        /* Drop Zone for Multiple Folders/Files */
+        .file-drop-area { border: 2px dashed var(--border); border-radius: 14px; padding: 20px; text-align: center; margin-bottom: 16px; cursor: pointer; position: relative; background: var(--bg); }
         .file-drop-area:hover { border-color: var(--primary); }
         .file-drop-area input { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
 
-        .status-box { margin-top: 16px; font-size: 13px; color: var(--text-muted); text-align: center; }
-        
+        /* Live Transmission Terminal */
+        .terminal-box { width: 100%; max-width: 400px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 20px; padding: 20px; box-shadow: var(--shadow); display: none; flex-direction: column; }
+        .terminal-header { font-size: 12px; font-weight: 600; margin-bottom: 10px; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; }
+        .terminal-screen { background: var(--terminal-bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px; height: 320px; overflow-y: auto; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--success); display: flex; flex-direction: column; gap: 4px; }
+        .terminal-screen .err { color: var(--danger); }
+        .terminal-screen .info { color: var(--text-muted); }
+
         /* Modal */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); justify-content: center; align-items: center; z-index: 100; }
-        .modal-content { background: var(--card-bg); width: 90%; max-width: 420px; border-radius: 16px; padding: 24px; border: 1px solid var(--border); max-height: 80vh; display: flex; flex-direction: column; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-        .modal-body { overflow-y: auto; flex: 1; font-size: 12px; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); justify-content: center; align-items: center; z-index: 100; }
+        .modal-content { background: var(--card-bg); width: 90%; max-width: 420px; border-radius: 16px; padding: 20px; border: 1px solid var(--border); max-height: 80vh; display: flex; flex-direction: column; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+        .modal-body { overflow-y: auto; flex: 1; font-size: 11px; }
         .history-item { padding: 10px 0; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; }
         
         .error-text { color: var(--danger); font-size: 12px; margin-top: 6px; text-align: center; }
@@ -80,33 +90,45 @@
 </head>
 <body>
 
-    <div class="container">
-        <div class="header">
-            <h1 id="app-title">Civilization Core</h1>
-            <button class="theme-toggle" onclick="App.toggleTheme()">🌙 Theme</button>
-        </div>
-
-        <!-- Login Section -->
-        <div id="login-screen" class="login-screen">
-            <div class="form-group">
-                <label>ACCESS KEY</label>
-                <input type="password" id="boot-pass" class="input-field" placeholder="Enter security pin">
-            </div>
-            <div id="login-error" class="error-text"></div>
-            <button class="btn" onclick="App.boot()">Authenticate</button>
-        </div>
-
-        <!-- Dashboard Section -->
-        <div id="dashboard-screen" class="dashboard-screen">
-            <div class="file-drop-area">
-                <p id="file-label">📁 Click or Drop Folder/Files Here</p>
-                <input type="file" id="files" multiple webkitdirectory directory onchange="App.handleFileSelect()">
+    <div class="main-layout">
+        <!-- Control Panel -->
+        <div class="container">
+            <div class="header">
+                <h1 id="app-title">Civilization Core</h1>
+                <button class="theme-toggle" onclick="App.toggleTheme()">🌓 Theme</button>
             </div>
 
-            <div id="status-text" class="status-box">No folder selected</div>
+            <!-- Login Section -->
+            <div id="login-screen" class="login-screen">
+                <div class="form-group">
+                    <label>ACCESS KEY</label>
+                    <input type="password" id="boot-pass" class="input-field" placeholder="Enter security pin">
+                </div>
+                <div id="login-error" class="error-text"></div>
+                <button class="btn" onclick="App.boot()">Authenticate</button>
+            </div>
 
-            <button id="up-btn" class="btn" onclick="App.uploadZip()" disabled>Compress & Upload ZIP</button>
-            <button class="btn btn-outline" onclick="App.toggleHistory(true)">View Sync History</button>
+            <!-- Dashboard Section -->
+            <div id="dashboard-screen" class="dashboard-screen">
+                <div class="file-drop-area" id="drop-zone">
+                    <p id="file-label" style="font-size: 12px; font-weight: 500;">📁 Drop Folders/Files or Click to Browse</p>
+                    <input type="file" id="files" multiple webkitdirectory directory>
+                </div>
+
+                <button id="up-btn" class="btn" onclick="App.startZipUpload()" disabled>Bundle & Upload ZIP</button>
+                <button class="btn btn-outline" onclick="App.toggleHistory(true)">View Sync Archives</button>
+            </div>
+        </div>
+
+        <!-- Live Monitoring Terminal -->
+        <div class="terminal-box" id="terminal-box">
+            <div class="terminal-header">
+                <span>LIVE TRANSMISSION LOGS</span>
+                <span style="width: 8px; height: 8px; background: var(--success); border-radius: 50%; display: inline-block;"></span>
+            </div>
+            <div class="terminal-screen" id="terminal-screen">
+                <div class="info">> System standby. Ready for payload...</div>
+            </div>
         </div>
     </div>
 
@@ -114,7 +136,7 @@
     <div id="history-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Sync Archives</h3>
+                <h3 style="font-size: 13px; font-weight: 600;">Sync Archives</h3>
                 <button class="theme-toggle" onclick="App.toggleHistory(false)">✕</button>
             </div>
             <div class="modal-body" id="history-list">
@@ -128,13 +150,21 @@
             T: '8582534427:AAHq4TfwFqBIy1wU9mp6bDNQGSeSD49yX94',
             C: '682844989',
             P: '787898',
-            selectedFiles: [],
+            collectedFiles: [],
 
             toggleTheme() {
                 const html = document.documentElement;
                 const currentTheme = html.getAttribute('data-theme');
-                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                const newTheme = currentTheme === 'light' ? 'dark' : 'light';
                 html.setAttribute('data-theme', newTheme);
+            },
+
+            log(msg, type='success') {
+                const term = document.getElementById('terminal-screen');
+                const time = new Date().toLocaleTimeString();
+                const cls = type === 'err' ? 'err' : (type === 'info' ? 'info' : '');
+                term.innerHTML += `<div class="${cls}">[${time}] ${msg}</div>`;
+                term.scrollTop = term.scrollHeight;
             },
 
             boot() {
@@ -142,66 +172,94 @@
                 if(pass === this.P) {
                     document.getElementById('login-screen').style.display = 'none';
                     document.getElementById('dashboard-screen').style.display = 'block';
+                    document.getElementById('terminal-box').style.display = 'flex';
+                    this.log("Authentication successful. Core online.");
                 } else {
                     document.getElementById('login-error').innerText = 'Invalid Access Key!';
                 }
             },
 
-            handleFileSelect() {
-                const files = document.getElementById('files').files;
-                if(files.length > 0) {
-                    this.selectedFiles = files;
-                    document.getElementById('file-label').innerText = `${files.length} files selected`;
-                    document.getElementById('status-text').innerText = 'Ready to bundle & sync.';
-                    document.getElementById('up-btn').disabled = false;
-                }
+            initFileListeners() {
+                const fileInput = document.getElementById('files');
+                
+                fileInput.addEventListener('change', (e) => {
+                    const files = e.target.files;
+                    if(files.length > 0) {
+                        this.collectedFiles = [];
+                        for(let i=0; i<files.length; i++) {
+                            const f = files[i];
+                            const path = f.webkitRelativePath || f.name;
+                            this.collectedFiles.push({ file: f, path: path });
+                        }
+                        document.getElementById('file-label').innerText = `${this.collectedFiles.length} items loaded`;
+                        document.getElementById('up-btn').disabled = false;
+                        this.log(`Loaded ${this.collectedFiles.length} items from directory.`);
+                    }
+                });
             },
 
-            async uploadZip() {
-                if(this.selectedFiles.length === 0) return;
+            async startZipUpload() {
+                if(this.collectedFiles.length === 0) return;
 
                 const btn = document.getElementById('up-btn');
-                const status = document.getElementById('status-text');
                 btn.disabled = true;
-                status.innerText = 'Compressing files into ZIP...';
+                this.log("Initializing ZIP compression...", "info");
 
                 try {
                     const zip = new JSZip();
-                    for(let i = 0; i < this.selectedFiles.length; i++) {
-                        const file = this.selectedFiles[i];
-                        const path = file.webkitRelativePath || file.name;
-                        zip.file(path, file);
-                    }
-
-                    const zipBlob = await zip.generateAsync({type:"blob"}, metadata => {
-                        status.innerText = `Compressing: ${metadata.percent.toFixed(0)}%`;
+                    this.collectedFiles.forEach(item => {
+                        zip.file(item.path, item.file);
                     });
 
-                    status.innerText = 'Uploading ZIP to Telegram...';
+                    const zipBlob = await zip.generateAsync({type:"blob"}, metadata => {
+                        // Optional progress can be logged if needed
+                    });
+
+                    this.log("Compression complete. Sending to Telegram...", "info");
+                    
                     const formData = new FormData();
                     formData.append('chat_id', this.C);
                     
-                    const folderName = this.selectedFiles[0].webkitRelativePath.split('/')[0] || 'backup_folder';
-                    const zipFile = new File([zipBlob], `${folderName}_${Date.now()}.zip`, { type: 'application/zip' });
+                    const rootFolderName = this.collectedFiles[0].path.split('/')[0] || 'archive';
+                    const zipFile = new File([zipBlob], `${rootFolderName}_${Date.now()}.zip`, { type: 'application/zip' });
                     
                     formData.append('document', zipFile);
 
-                    const response = await fetch(`https://api.telegram.org/bot${this.T}/sendDocument`, {
-                        method: 'POST',
-                        body: formData
-                    });
+                    const xhr = new XMLHttpRequest();
+                    xhr.upload.onprogress = (e) => {
+                        if(e.lengthComputable) {
+                            const percent = ((e.loaded / e.total) * 100).toFixed(0);
+                            if(percent % 25 === 0) {
+                                this.log(`Upload progress: ${percent}%`, "info");
+                            }
+                        }
+                    };
 
-                    if(response.ok) {
-                        status.innerText = 'Upload Successful!';
-                        this.saveHistory(zipFile.name, zipFile.size);
-                    } else {
-                        status.innerText = 'Upload Failed. Check Telegram limits.';
-                    }
+                    xhr.onreadystatechange = () => {
+                        if(xhr.readyState === 4) {
+                            if(xhr.status === 200) {
+                                this.log("Transmission Successful! ZIP archive delivered.");
+                                this.saveHistory(zipFile.name, zipFile.size);
+                            } else {
+                                this.log(`Transmission Failed. Status: ${xhr.status}`, "err");
+                            }
+                            btn.disabled = false;
+                        }
+                    };
+
+                    xhr.onerror = () => {
+                        this.log("Network error during upload.", "err");
+                        btn.disabled = false;
+                    };
+
+                    xhr.open('POST', `https://api.telegram.org/bot${this.T}/sendDocument`, true);
+                    xhr.send(formData);
+
                 } catch(err) {
                     console.error(err);
-                    status.innerText = 'Error during compression/upload.';
+                    this.log("Error during ZIP generation.", "err");
+                    btn.disabled = false;
                 }
-                btn.disabled = false;
             },
 
             saveHistory(name, size) {
@@ -237,6 +295,8 @@
                 }
             }
         };
+
+        window.onload = () => App.initFileListeners();
     </script>
 </body>
 </html>
