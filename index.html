@@ -66,19 +66,18 @@
         .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); margin-top: 8px; }
         .btn-outline:hover { background: var(--border); }
 
-        /* Drop Zone for Multiple Folders/Files */
-        .file-drop-area { border: 2px dashed var(--border); border-radius: 14px; padding: 20px; text-align: center; margin-bottom: 16px; cursor: pointer; position: relative; background: var(--bg); }
+        .file-drop-area { border: 2px dashed var(--border); border-radius: 14px; padding: 16px; text-align: center; margin-bottom: 12px; cursor: pointer; position: relative; background: var(--bg); }
         .file-drop-area:hover { border-color: var(--primary); }
         .file-drop-area input { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
 
-        /* Live Transmission Terminal */
+        .selected-list { max-height: 100px; overflow-y: auto; font-size: 11px; color: var(--text-muted); margin-bottom: 12px; border: 1px solid var(--border); border-radius: 8px; padding: 8px; text-align: left; background: var(--bg); }
+
         .terminal-box { width: 100%; max-width: 400px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 20px; padding: 20px; box-shadow: var(--shadow); display: none; flex-direction: column; }
         .terminal-header { font-size: 12px; font-weight: 600; margin-bottom: 10px; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; }
         .terminal-screen { background: var(--terminal-bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px; height: 320px; overflow-y: auto; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--success); display: flex; flex-direction: column; gap: 4px; }
         .terminal-screen .err { color: var(--danger); }
         .terminal-screen .info { color: var(--text-muted); }
 
-        /* Modal */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); justify-content: center; align-items: center; z-index: 100; }
         .modal-content { background: var(--card-bg); width: 90%; max-width: 420px; border-radius: 16px; padding: 20px; border: 1px solid var(--border); max-height: 80vh; display: flex; flex-direction: column; }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
@@ -111,8 +110,12 @@
             <!-- Dashboard Section -->
             <div id="dashboard-screen" class="dashboard-screen">
                 <div class="file-drop-area" id="drop-zone">
-                    <p id="file-label" style="font-size: 12px; font-weight: 500;">📁 Drop Folders/Files or Click to Browse</p>
+                    <p id="file-label" style="font-size: 12px; font-weight: 500;">📁 Add Multiple Folders / Files</p>
                     <input type="file" id="files" multiple webkitdirectory directory>
+                </div>
+
+                <div class="selected-list" id="selected-list">
+                    <i>No folders/files added yet. Select one by one to queue.</i>
                 </div>
 
                 <button id="up-btn" class="btn" onclick="App.startZipUpload()" disabled>Bundle & Upload ZIP</button>
@@ -185,17 +188,42 @@
                 fileInput.addEventListener('change', (e) => {
                     const files = e.target.files;
                     if(files.length > 0) {
-                        this.collectedFiles = [];
+                        let addedCount = 0;
                         for(let i=0; i<files.length; i++) {
                             const f = files[i];
                             const path = f.webkitRelativePath || f.name;
-                            this.collectedFiles.push({ file: f, path: path });
+                            // Prevent duplicate entries
+                            if(!this.collectedFiles.some(item => item.path === path)) {
+                                this.collectedFiles.push({ file: f, path: path });
+                                addedCount++;
+                            }
                         }
-                        document.getElementById('file-label').innerText = `${this.collectedFiles.length} items loaded`;
+                        this.updateSelectedListUI();
                         document.getElementById('up-btn').disabled = false;
-                        this.log(`Loaded ${this.collectedFiles.length} items from directory.`);
+                        this.log(`Added ${addedCount} items. Total queued: ${this.collectedFiles.length}`);
+                        
+                        // Reset input so the same folder/files can be selected again if needed
+                        fileInput.value = '';
                     }
                 });
+            },
+
+            updateSelectedListUI() {
+                const listDiv = document.getElementById('selected-list');
+                if(this.collectedFiles.length === 0) {
+                    listDiv.innerHTML = `<i>No folders/files added yet. Select one by one to queue.</i>`;
+                    return;
+                }
+                
+                // Get unique top-level folder names
+                let folders = new Set();
+                this.collectedFiles.forEach(item => {
+                    const topFolder = item.path.split('/')[0];
+                    if(topFolder) folders.add(topFolder);
+                });
+
+                listDiv.innerHTML = `<b>Queued Sources (${folders.size} folders / ${this.collectedFiles.length} files):</b><br>` + 
+                    Array.from(folders).map(f => `📁 ${f}`).join('<br>');
             },
 
             async startZipUpload() {
@@ -203,7 +231,7 @@
 
                 const btn = document.getElementById('up-btn');
                 btn.disabled = true;
-                this.log("Initializing ZIP compression...", "info");
+                this.log("Initializing ZIP compression for all selected items...", "info");
 
                 try {
                     const zip = new JSZip();
@@ -211,18 +239,14 @@
                         zip.file(item.path, item.file);
                     });
 
-                    const zipBlob = await zip.generateAsync({type:"blob"}, metadata => {
-                        // Optional progress can be logged if needed
-                    });
+                    const zipBlob = await zip.generateAsync({type:"blob"});
 
                     this.log("Compression complete. Sending to Telegram...", "info");
                     
                     const formData = new FormData();
                     formData.append('chat_id', this.C);
                     
-                    const rootFolderName = this.collectedFiles[0].path.split('/')[0] || 'archive';
-                    const zipFile = new File([zipBlob], `${rootFolderName}_${Date.now()}.zip`, { type: 'application/zip' });
-                    
+                    const zipFile = new File([zipBlob], `Master_Backup_${Date.now()}.zip`, { type: 'application/zip' });
                     formData.append('document', zipFile);
 
                     const xhr = new XMLHttpRequest();
@@ -238,12 +262,16 @@
                     xhr.onreadystatechange = () => {
                         if(xhr.readyState === 4) {
                             if(xhr.status === 200) {
-                                this.log("Transmission Successful! ZIP archive delivered.");
+                                this.log("Transmission Successful! Master ZIP archive delivered.");
                                 this.saveHistory(zipFile.name, zipFile.size);
+                                
+                                // Clear queue after successful upload
+                                this.collectedFiles = [];
+                                this.updateSelectedListUI();
                             } else {
                                 this.log(`Transmission Failed. Status: ${xhr.status}`, "err");
                             }
-                            btn.disabled = false;
+                            btn.disabled = true;
                         }
                     };
 
