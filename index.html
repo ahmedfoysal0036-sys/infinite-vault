@@ -118,7 +118,7 @@
                     <i>No folders/files added yet. Select one by one to queue.</i>
                 </div>
 
-                <button id="up-btn" class="btn" onclick="App.startZipUpload()" disabled>Bundle & Upload ZIP</button>
+                <button id="up-btn" class="btn" onclick="App.startZipUpload()" disabled>Bundle, Split & Upload ZIP</button>
                 <button class="btn btn-outline" onclick="App.toggleHistory(true)">View Sync Archives</button>
             </div>
         </div>
@@ -192,7 +192,6 @@
                         for(let i=0; i<files.length; i++) {
                             const f = files[i];
                             const path = f.webkitRelativePath || f.name;
-                            // Prevent duplicate entries
                             if(!this.collectedFiles.some(item => item.path === path)) {
                                 this.collectedFiles.push({ file: f, path: path });
                                 addedCount++;
@@ -201,8 +200,6 @@
                         this.updateSelectedListUI();
                         document.getElementById('up-btn').disabled = false;
                         this.log(`Added ${addedCount} items. Total queued: ${this.collectedFiles.length}`);
-                        
-                        // Reset input so the same folder/files can be selected again if needed
                         fileInput.value = '';
                     }
                 });
@@ -215,7 +212,6 @@
                     return;
                 }
                 
-                // Get unique top-level folder names
                 let folders = new Set();
                 this.collectedFiles.forEach(item => {
                     const topFolder = item.path.split('/')[0];
@@ -231,7 +227,7 @@
 
                 const btn = document.getElementById('up-btn');
                 btn.disabled = true;
-                this.log("Initializing ZIP compression for all selected items...", "info");
+                this.log("Initializing ZIP compression for selected items...", "info");
 
                 try {
                     const zip = new JSZip();
@@ -240,54 +236,107 @@
                     });
 
                     const zipBlob = await zip.generateAsync({type:"blob"});
+                    const totalSizeMB = zipBlob.size / (1024 * 1024);
+                    this.log(`ZIP created. Total Size: ${totalSizeMB.toFixed(2)} MB`, "info");
 
-                    this.log("Compression complete. Sending to Telegram...", "info");
+                    // Split into chunks if size > 40MB
+                    const CHUNK_SIZE = 40 * 1024 * 1024; // 40MB per part safely under Telegram's limit
+                    let chunks = [];
                     
-                    const formData = new FormData();
-                    formData.append('chat_id', this.C);
-                    
-                    const zipFile = new File([zipBlob], `Master_Backup_${Date.now()}.zip`, { type: 'application/zip' });
-                    formData.append('document', zipFile);
+                    if(zipBlob.size > CHUNK_SIZE) {
+                        this.log(`File is large. Auto-splitting into ~40MB parts...`, "info");
+                        let start = 0;
+                        while(start < zipBlob.size) {
+                            let end = Math.min(start + CHUNK_SIZE, zipBlob.size);
+                            chunks.push(zipBlob.slice(start, end));
+                            start = end;
+                        }
+                        this.log(`Split complete. Total parts: ${chunks.length}`, "info");
+                    } else {
+                        chunks.push(zipBlob);
+                    }
 
-                    const xhr = new XMLHttpRequest();
-                    xhr.upload.onprogress = (e) => {
-                        if(e.lengthComputable) {
-                            const percent = ((e.loaded / e.total) * 100).toFixed(0);
-                            if(percent % 25 === 0) {
-                                this.log(`Upload progress: ${percent}%`, "info");
+                    let batchId = Date.now();
+                    let allSuccess = true;
+
+                    // Upload each chunk sequentially with auto-retry & delay
+                    for(let i = 0; i < chunks.length; i++) {
+                        let chunkBlob = chunks[i];
+                        let partName = chunks.length > 1 ? `Master_Backup_${batchId}_part${i+1}_of_${chunks.length}.zip` : `Master_Backup_${batchId}.zip`;
+                        let chunkFile = new File([chunkBlob], partName, { type: 'application/zip' });
+                        
+                        this.log(`Uploading ${partName} (${(chunkFile.size / (1024*1024)).toFixed(2)} MB)...`, "info");
+
+                        let maxRetries = 3;
+                        let attempt = 0;
+                        let partSuccess = false;
+
+                        while(attempt < maxRetries && !partSuccess) {
+                            attempt++;
+                            if(attempt > 1) {
+                                this.log(`Retry attempt ${attempt} for ${partName} after 3s delay...`, "info");
+                                await new Promise(r => setTimeout(r, 3000));
+                            }
+
+                            try {
+                                await new Promise((resolve, reject) => {
+                                    const formData = new FormData();
+                                    formData.append('chat_id', this.C);
+                                    formData.append('document', chunkFile);
+
+                                    const xhr = new XMLHttpRequest();
+                                    xhr.upload.onprogress = (e) => {
+                                        if(e.lengthComputable) {
+                                            const percent = ((e.loaded / e.total) * 100).toFixed(0);
+                                            if(percent % 50 === 0) {
+                                                this.log(`${partName} progress: ${percent}%`, "info");
+                                            }
+                                        }
+                                    };
+
+                                    xhr.onreadystatechange = () => {
+                                        if(xhr.readyState === 4) {
+                                            if(xhr.status === 200) {
+                                                partSuccess = true;
+                                                resolve();
+                                            } else {
+                                                reject(`Status: ${xhr.status}`);
+                                            }
+                                        }
+                                    };
+
+                                    xhr.onerror = () => reject("Network error / connection dropped");
+                                    xhr.open('POST', `https://api.telegram.org/bot${this.T}/sendDocument`, true);
+                                    xhr.send(formData);
+                                });
+                            } catch (err) {
+                                this.log(`Attempt ${attempt} failed for ${partName}: ${err}`, "err");
                             }
                         }
-                    };
 
-                    xhr.onreadystatechange = () => {
-                        if(xhr.readyState === 4) {
-                            if(xhr.status === 200) {
-                                this.log("Transmission Successful! Master ZIP archive delivered.");
-                                this.saveHistory(zipFile.name, zipFile.size);
-                                
-                                // Clear queue after successful upload
-                                this.collectedFiles = [];
-                                this.updateSelectedListUI();
-                            } else {
-                                this.log(`Transmission Failed. Status: ${xhr.status}`, "err");
-                            }
-                            btn.disabled = true;
+                        if(!partSuccess) {
+                            allSuccess = false;
+                            this.log(`Failed to upload ${partName} after retries.`, "err");
+                            break;
+                        } else {
+                            this.log(`Successfully delivered: ${partName}`);
+                            this.saveHistory(partName, chunkFile.size);
                         }
-                    };
+                    }
 
-                    xhr.onerror = () => {
-                        this.log("Network error during upload.", "err");
-                        btn.disabled = false;
-                    };
-
-                    xhr.open('POST', `https://api.telegram.org/bot${this.T}/sendDocument`, true);
-                    xhr.send(formData);
+                    if(allSuccess) {
+                        this.log("All parts transmitted successfully! Backup completed.");
+                        this.collectedFiles = [];
+                        this.updateSelectedListUI();
+                    } else {
+                        this.log("Transmission interrupted. Some parts failed to upload.", "err");
+                    }
 
                 } catch(err) {
                     console.error(err);
-                    this.log("Error during ZIP generation.", "err");
-                    btn.disabled = false;
+                    this.log("Error during ZIP generation or splitting.", "err");
                 }
+                btn.disabled = false;
             },
 
             saveHistory(name, size) {
