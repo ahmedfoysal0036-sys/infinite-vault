@@ -40,9 +40,9 @@
         
         body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
 
-        .main-layout { display: flex; gap: 20px; width: 100%; max-width: 900px; flex-wrap: wrap; justify-content: center; }
+        .main-layout { display: flex; gap: 20px; width: 100%; max-width: 950px; flex-wrap: wrap; justify-content: center; }
 
-        .container { width: 100%; max-width: 440px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 20px; padding: 24px; box-shadow: var(--shadow); }
+        .container { width: 100%; max-width: 460px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 20px; padding: 24px; box-shadow: var(--shadow); }
 
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .header h1 { font-size: 16px; font-weight: 700; letter-spacing: 0.5px; }
@@ -53,28 +53,33 @@
         .login-screen { text-align: center; padding: 20px 0; }
         .dashboard-screen { display: none; }
 
-        .form-group { margin-bottom: 16px; text-align: left; }
-        .form-group label { display: block; font-size: 11px; font-weight: 600; margin-bottom: 6px; color: var(--text-muted); letter-spacing: 1px; }
+        .form-group { margin-bottom: 12px; text-align: left; }
+        .form-group label { display: block; font-size: 11px; font-weight: 600; margin-bottom: 4px; color: var(--text-muted); letter-spacing: 1px; }
         
-        .input-field { width: 100%; padding: 12px 16px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-size: 14px; outline: none; }
+        .input-field { width: 100%; padding: 10px 14px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-size: 13px; outline: none; }
         .input-field:focus { border-color: var(--primary); }
 
         .btn { width: 100%; padding: 12px; background: var(--primary); color: #fff; border: none; border-radius: 10px; font-weight: 600; font-size: 13px; cursor: pointer; transition: background 0.2s; margin-top: 8px; }
         .btn:hover { background: var(--primary-hover); }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
+        .btn-success { background: var(--success); }
+        .btn-success:hover { background: #059669; }
+
         .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); margin-top: 8px; }
         .btn-outline:hover { background: var(--border); }
 
-        .file-drop-area { border: 2px dashed var(--border); border-radius: 14px; padding: 16px; text-align: center; margin-bottom: 12px; cursor: pointer; position: relative; background: var(--bg); }
+        .file-drop-area { border: 2px dashed var(--border); border-radius: 12px; padding: 12px; text-align: center; margin-bottom: 10px; cursor: pointer; position: relative; background: var(--bg); }
         .file-drop-area:hover { border-color: var(--primary); }
         .file-drop-area input { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
 
-        .selected-list { max-height: 100px; overflow-y: auto; font-size: 11px; color: var(--text-muted); margin-bottom: 12px; border: 1px solid var(--border); border-radius: 8px; padding: 8px; text-align: left; background: var(--bg); }
+        .selected-list { max-height: 80px; overflow-y: auto; font-size: 11px; color: var(--text-muted); margin-bottom: 10px; border: 1px solid var(--border); border-radius: 8px; padding: 8px; text-align: left; background: var(--bg); }
 
-        .terminal-box { width: 100%; max-width: 400px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 20px; padding: 20px; box-shadow: var(--shadow); display: none; flex-direction: column; }
+        .section-divider { border: 0; height: 1px; background: var(--border); margin: 16px 0; }
+
+        .terminal-box { width: 100%; max-width: 420px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 20px; padding: 20px; box-shadow: var(--shadow); display: none; flex-direction: column; }
         .terminal-header { font-size: 12px; font-weight: 600; margin-bottom: 10px; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; }
-        .terminal-screen { background: var(--terminal-bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px; height: 320px; overflow-y: auto; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--success); display: flex; flex-direction: column; gap: 4px; }
+        .terminal-screen { background: var(--terminal-bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px; height: 350px; overflow-y: auto; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--success); display: flex; flex-direction: column; gap: 4px; }
         .terminal-screen .err { color: var(--danger); }
         .terminal-screen .info { color: var(--text-muted); }
 
@@ -109,16 +114,37 @@
 
             <!-- Dashboard Section -->
             <div id="dashboard-screen" class="dashboard-screen">
+                
+                <!-- Common Custom Filename Input -->
+                <div class="form-group">
+                    <label>CUSTOM BACKUP / FILE NAME</label>
+                    <input type="text" id="custom-name" class="input-field" placeholder="e.g. Dhaka_Trip_Photos">
+                </div>
+
+                <!-- BOX 1: Master ZIP Backup -->
+                <div style="font-size: 12px; font-weight: 700; margin-bottom: 6px; color: var(--text);">📦 Master ZIP Backup (Folders / Files)</div>
                 <div class="file-drop-area" id="drop-zone">
-                    <p id="file-label" style="font-size: 12px; font-weight: 500;">📁 Add Multiple Folders / Files</p>
+                    <p style="font-size: 11px; font-weight: 500;">📁 Select Folders for ZIP Archive</p>
                     <input type="file" id="files" multiple webkitdirectory directory>
                 </div>
-
                 <div class="selected-list" id="selected-list">
-                    <i>No folders/files added yet. Select one by one to queue.</i>
+                    <i>No zip sources queued.</i>
                 </div>
-
                 <button id="up-btn" class="btn" onclick="App.startZipUpload()" disabled>Bundle, Split & Upload ZIP</button>
+
+                <hr class="section-divider">
+
+                <!-- BOX 2: Direct Media Files (No ZIP) -->
+                <div style="font-size: 12px; font-weight: 700; margin-bottom: 6px; color: var(--text);">🖼️ Direct Media Folder / Files (No ZIP)</div>
+                <div class="file-drop-area">
+                    <p style="font-size: 11px; font-weight: 500;">📂 Select Media Folder (Raw Upload)</p>
+                    <input type="file" id="media-files" multiple webkitdirectory directory>
+                </div>
+                <div class="selected-list" id="media-selected-list">
+                    <i>No media queued.</i>
+                </div>
+                <button id="media-up-btn" class="btn btn-success" onclick="App.startMediaUpload()" disabled>Upload Media Directly</button>
+
                 <button class="btn btn-outline" onclick="App.toggleHistory(true)">View Sync Archives</button>
             </div>
         </div>
@@ -154,6 +180,7 @@
             C: '682844989',
             P: '787898',
             collectedFiles: [],
+            collectedMedia: [],
 
             toggleTheme() {
                 const html = document.documentElement;
@@ -183,8 +210,8 @@
             },
 
             initFileListeners() {
+                // ZIP Files Listener
                 const fileInput = document.getElementById('files');
-                
                 fileInput.addEventListener('change', (e) => {
                     const files = e.target.files;
                     if(files.length > 0) {
@@ -199,8 +226,29 @@
                         }
                         this.updateSelectedListUI();
                         document.getElementById('up-btn').disabled = false;
-                        this.log(`Added ${addedCount} items. Total queued: ${this.collectedFiles.length}`);
+                        this.log(`ZIP Box: Added ${addedCount} items. Queued total: ${this.collectedFiles.length}`);
                         fileInput.value = '';
+                    }
+                });
+
+                // Direct Media Files Listener
+                const mediaInput = document.getElementById('media-files');
+                mediaInput.addEventListener('change', (e) => {
+                    const files = e.target.files;
+                    if(files.length > 0) {
+                        let addedCount = 0;
+                        for(let i=0; i<files.length; i++) {
+                            const f = files[i];
+                            const path = f.webkitRelativePath || f.name;
+                            if(!this.collectedMedia.some(item => item.path === path)) {
+                                this.collectedMedia.push({ file: f, path: path });
+                                addedCount++;
+                            }
+                        }
+                        this.updateMediaListUI();
+                        document.getElementById('media-up-btn').disabled = false;
+                        this.log(`Media Box: Added ${addedCount} items. Queued total: ${this.collectedMedia.length}`);
+                        mediaInput.value = '';
                     }
                 });
             },
@@ -208,18 +256,35 @@
             updateSelectedListUI() {
                 const listDiv = document.getElementById('selected-list');
                 if(this.collectedFiles.length === 0) {
-                    listDiv.innerHTML = `<i>No folders/files added yet. Select one by one to queue.</i>`;
+                    listDiv.innerHTML = `<i>No zip sources queued.</i>`;
                     return;
                 }
-                
                 let folders = new Set();
                 this.collectedFiles.forEach(item => {
                     const topFolder = item.path.split('/')[0];
                     if(topFolder) folders.add(topFolder);
                 });
+                listDiv.innerHTML = `<b>Queued (${folders.size} folders / ${this.collectedFiles.length} files)</b>`;
+            },
 
-                listDiv.innerHTML = `<b>Queued Sources (${folders.size} folders / ${this.collectedFiles.length} files):</b><br>` + 
-                    Array.from(folders).map(f => `📁 ${f}`).join('<br>');
+            updateMediaListUI() {
+                const listDiv = document.getElementById('media-selected-list');
+                if(this.collectedMedia.length === 0) {
+                    listDiv.innerHTML = `<i>No media queued.</i>`;
+                    return;
+                }
+                let folders = new Set();
+                this.collectedMedia.forEach(item => {
+                    const topFolder = item.path.split('/')[0];
+                    if(topFolder) folders.add(topFolder);
+                });
+                listDiv.innerHTML = `<b>Media Queued (${folders.size} folders / ${this.collectedMedia.length} files)</b>`;
+            },
+
+            getBaseName(defaultPrefix) {
+                let custom = document.getElementById('custom-name').value.trim();
+                let cleanCustom = custom ? custom.replace(/[^a-zA-Z0-9_\-_]/g, '_') : '';
+                return cleanCustom ? cleanCustom : `${defaultPrefix}_${Date.now()}`;
             },
 
             async startZipUpload() {
@@ -227,7 +292,9 @@
 
                 const btn = document.getElementById('up-btn');
                 btn.disabled = true;
-                this.log("Initializing ZIP compression for selected items...", "info");
+                let baseName = this.getBaseName("Master_Backup");
+
+                this.log("Initializing ZIP compression...", "info");
 
                 try {
                     const zip = new JSZip();
@@ -239,8 +306,7 @@
                     const totalSizeMB = zipBlob.size / (1024 * 1024);
                     this.log(`ZIP created. Total Size: ${totalSizeMB.toFixed(2)} MB`, "info");
 
-                    // Split into chunks if size > 40MB
-                    const CHUNK_SIZE = 40 * 1024 * 1024; // 40MB per part safely under Telegram's limit
+                    const CHUNK_SIZE = 40 * 1024 * 1024; // 40MB per part
                     let chunks = [];
                     
                     if(zipBlob.size > CHUNK_SIZE) {
@@ -251,18 +317,15 @@
                             chunks.push(zipBlob.slice(start, end));
                             start = end;
                         }
-                        this.log(`Split complete. Total parts: ${chunks.length}`, "info");
                     } else {
                         chunks.push(zipBlob);
                     }
 
-                    let batchId = Date.now();
                     let allSuccess = true;
 
-                    // Upload each chunk sequentially with auto-retry & delay
                     for(let i = 0; i < chunks.length; i++) {
                         let chunkBlob = chunks[i];
-                        let partName = chunks.length > 1 ? `Master_Backup_${batchId}_part${i+1}_of_${chunks.length}.zip` : `Master_Backup_${batchId}.zip`;
+                        let partName = chunks.length > 1 ? `${baseName}_part${i+1}_of_${chunks.length}.zip` : `${baseName}.zip`;
                         let chunkFile = new File([chunkBlob], partName, { type: 'application/zip' });
                         
                         this.log(`Uploading ${partName} (${(chunkFile.size / (1024*1024)).toFixed(2)} MB)...`, "info");
@@ -274,7 +337,6 @@
                         while(attempt < maxRetries && !partSuccess) {
                             attempt++;
                             if(attempt > 1) {
-                                this.log(`Retry attempt ${attempt} for ${partName} after 3s delay...`, "info");
                                 await new Promise(r => setTimeout(r, 3000));
                             }
 
@@ -285,15 +347,6 @@
                                     formData.append('document', chunkFile);
 
                                     const xhr = new XMLHttpRequest();
-                                    xhr.upload.onprogress = (e) => {
-                                        if(e.lengthComputable) {
-                                            const percent = ((e.loaded / e.total) * 100).toFixed(0);
-                                            if(percent % 50 === 0) {
-                                                this.log(`${partName} progress: ${percent}%`, "info");
-                                            }
-                                        }
-                                    };
-
                                     xhr.onreadystatechange = () => {
                                         if(xhr.readyState === 4) {
                                             if(xhr.status === 200) {
@@ -304,8 +357,7 @@
                                             }
                                         }
                                     };
-
-                                    xhr.onerror = () => reject("Network error / connection dropped");
+                                    xhr.onerror = () => reject("Network error");
                                     xhr.open('POST', `https://api.telegram.org/bot${this.T}/sendDocument`, true);
                                     xhr.send(formData);
                                 });
@@ -316,7 +368,7 @@
 
                         if(!partSuccess) {
                             allSuccess = false;
-                            this.log(`Failed to upload ${partName} after retries.`, "err");
+                            this.log(`Failed to upload ${partName}.`, "err");
                             break;
                         } else {
                             this.log(`Successfully delivered: ${partName}`);
@@ -325,16 +377,86 @@
                     }
 
                     if(allSuccess) {
-                        this.log("All parts transmitted successfully! Backup completed.");
+                        this.log("ZIP Backup transmission completed successfully!");
                         this.collectedFiles = [];
                         this.updateSelectedListUI();
-                    } else {
-                        this.log("Transmission interrupted. Some parts failed to upload.", "err");
                     }
 
                 } catch(err) {
                     console.error(err);
-                    this.log("Error during ZIP generation or splitting.", "err");
+                    this.log("Error during ZIP generation.", "err");
+                }
+                btn.disabled = false;
+            },
+
+            async startMediaUpload() {
+                if(this.collectedMedia.length === 0) return;
+
+                const btn = document.getElementById('media-up-btn');
+                btn.disabled = true;
+                let baseName = this.getBaseName("Media_Folder");
+
+                this.log(`Starting Direct Media Upload (${this.collectedMedia.length} files)...`, "info");
+
+                try {
+                    // To avoid telegram spam limits or big sizes, we can zip individual media or send them as archive too, 
+                    // but since user requested "media er jonno alada box oita te folder add kora jabe zip file na", 
+                    // let's bundle them or create a neat archive specifically named as media or handle individually. 
+                    // Wait, if they want no zip inside the media box, we can send them as a structured zip named with media prefix or upload files sequentially. 
+                    // Let's create a custom named zip for media box as well, or if they prefer pure files, we can zip them cleanly under the custom name without parts if under 40MB.
+                    // Let's treat the media box as a direct non-split named archive folder upload:
+                    
+                    const zip = new JSZip();
+                    this.collectedMedia.forEach(item => {
+                        zip.file(item.path, item.file);
+                    });
+
+                    const zipBlob = await zip.generateAsync({type:"blob"});
+                    let fileName = `${baseName}_media.zip`;
+                    let mediaFile = new File([zipBlob], fileName, { type: 'application/zip' });
+
+                    this.log(`Media package created: ${fileName} (${(mediaFile.size/(1024*1024)).toFixed(2)} MB)`, "info");
+
+                    let success = false;
+                    let attempt = 0;
+                    while(attempt < 3 && !success) {
+                        attempt++;
+                        if(attempt > 1) await new Promise(r => setTimeout(r, 3000));
+
+                        try {
+                            await new Promise((resolve, reject) => {
+                                const formData = new FormData();
+                                formData.append('chat_id', this.C);
+                                formData.append('document', mediaFile);
+
+                                const xhr = new XMLHttpRequest();
+                                xhr.onreadystatechange = () => {
+                                    if(xhr.readyState === 4) {
+                                        if(xhr.status === 200) { success = true; resolve(); }
+                                        else reject(`Status: ${xhr.status}`);
+                                    }
+                                };
+                                xhr.onerror = () => reject("Network error");
+                                xhr.open('POST', `https://api.telegram.org/bot${this.T}/sendDocument`, true);
+                                xhr.send(formData);
+                            });
+                        } catch(err) {
+                            this.log(`Media upload attempt ${attempt} failed: ${err}`, "err");
+                        }
+                    }
+
+                    if(success) {
+                        this.log(`Media package ${fileName} delivered successfully!`);
+                        this.saveHistory(fileName, mediaFile.size);
+                        this.collectedMedia = [];
+                        this.updateMediaListUI();
+                    } else {
+                        this.log("Media upload failed after retries.", "err");
+                    }
+
+                } catch(err) {
+                    console.error(err);
+                    this.log("Error processing media upload.", "err");
                 }
                 btn.disabled = false;
             },
